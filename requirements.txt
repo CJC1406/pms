@@ -1,0 +1,4 @@
+mkdir -p .github/workflows
+mkdir -p src/ui src/models src/services src/database
+mkdir -p tests/unit tests/integration
+mkdir -p docs/diagrams assets
