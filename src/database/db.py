@@ -27,3 +27,13 @@ SessionLocal = sessionmaker(
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models."""
+
+
+def init_db() -> None:
+    """Create database tables for all registered models."""
+    # Import models so SQLAlchemy registers their tables.
+    from src.models.batch import Batch  # noqa: F401
+    from src.models.product import Product  # noqa: F401
+
+    Base.metadata.create_all(bind=engine)
+
