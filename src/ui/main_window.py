@@ -1,3 +1,4 @@
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -230,25 +231,25 @@ class MainWindow(QMainWindow):
     def light_theme():
         return """
         QMainWindow, QWidget {
-            background-color: #F5F7FB;
-            color: #202938;
+            background-color: #FFF1F6;
+            color: #422536;
             font-family: Arial;
             font-size: 13px;
         }
 
         QFrame#sidebar {
             background-color: #FFFFFF;
-            border-right: 1px solid #E2E7EF;
+            border-right: 1px solid #F3D6E2;
         }
 
         QLabel#logo {
-            color: #2563EB;
+            color: #DB2777;
             font-size: 30px;
             font-weight: bold;
         }
 
         QLabel#sidebarSubtitle {
-            color: #7B8494;
+            color: #8D687A;
             font-size: 11px;
         }
 
@@ -257,51 +258,52 @@ class MainWindow(QMainWindow):
             padding: 12px;
             border: none;
             border-radius: 8px;
-            color: #566174;
+            color: #765365;
             background-color: transparent;
         }
 
         QPushButton#navButton:hover {
-            background-color: #EFF4FF;
-            color: #2563EB;
+            background-color: #FCE7F0;
+            color: #BE185D;
         }
 
         QPushButton#navButton[active="true"] {
-            background-color: #E8F0FF;
-            color: #2563EB;
+            background-color: #FBCFE0;
+            color: #9D174D;
             font-weight: bold;
         }
 
         QPushButton#themeButton {
             padding: 11px;
-            border: 1px solid #D8DFEA;
+            border: 1px solid #F0C4D6;
             border-radius: 8px;
             background-color: #FFFFFF;
+            color: #9D174D;
         }
 
         QPushButton#themeButton:hover,
         QPushButton#actionButton:hover {
-            background-color: #E8F0FF;
+            background-color: #FCE7F0;
         }
 
         QLabel#footer {
-            color: #8A94A5;
+            color: #9B7C8C;
             font-size: 11px;
         }
 
         QLabel#pageTitle {
             font-size: 27px;
             font-weight: bold;
-            color: #172033;
+            color: #4A1832;
         }
 
         QLabel#description {
-            color: #778195;
+            color: #876579;
             font-size: 13px;
         }
 
         QLabel#statusLabel {
-            color: #2563EB;
+            color: #BE185D;
             font-size: 11px;
             font-weight: bold;
         }
@@ -309,38 +311,38 @@ class MainWindow(QMainWindow):
         QLabel#sectionTitle {
             font-size: 17px;
             font-weight: bold;
-            color: #263247;
+            color: #652342;
             padding-top: 8px;
         }
 
         QFrame#dashboardCard {
             background-color: #FFFFFF;
-            border: 1px solid #E5EAF2;
+            border: 1px solid #F3D6E2;
             border-radius: 12px;
         }
 
         QLabel#cardHeading {
-            color: #778195;
+            color: #876579;
             font-size: 12px;
         }
 
         QLabel#cardValue {
-            color: #172033;
+            color: #9D174D;
             font-size: 28px;
             font-weight: bold;
         }
 
         QLabel#cardDetail {
-            color: #8A94A5;
+            color: #9B7C8C;
             font-size: 11px;
         }
 
         QPushButton#actionButton {
             background-color: #FFFFFF;
-            border: 1px solid #D8DFEA;
+            border: 1px solid #F0C4D6;
             border-radius: 8px;
             padding: 13px;
-            color: #263247;
+            color: #9D174D;
         }
         """
 
@@ -348,26 +350,26 @@ class MainWindow(QMainWindow):
     def dark_theme():
         return """
         QMainWindow, QWidget {
-            background-color: #151923;
-            color: #E5EAF3;
+            background-color: #21141D;
+            color: #FCE7F0;
             font-family: Arial;
             font-size: 13px;
         }
 
         QFrame#sidebar {
-            background-color: #1D2330;
-            border-right: 1px solid #303849;
+            background-color: #2C1B28;
+            border-right: 1px solid #493044;
         }
 
         QLabel#logo {
-            color: #79A7FF;
+            color: #F9A8D4;
             font-size: 30px;
             font-weight: bold;
         }
 
         QLabel#sidebarSubtitle, QLabel#description,
         QLabel#cardHeading, QLabel#footer {
-            color: #A0AABD;
+            color: #D5B8C8;
         }
 
         QPushButton#navButton {
@@ -375,14 +377,14 @@ class MainWindow(QMainWindow):
             padding: 12px;
             border: none;
             border-radius: 8px;
-            color: #CDD5E3;
+            color: #E8D4E0;
             background-color: transparent;
         }
 
         QPushButton#navButton:hover,
         QPushButton#navButton[active="true"] {
-            background-color: #303D57;
-            color: #9AB9FF;
+            background-color: #493044;
+            color: #F9A8D4;
         }
 
         QPushButton#navButton[active="true"] {
@@ -390,21 +392,21 @@ class MainWindow(QMainWindow):
         }
 
         QPushButton#themeButton, QPushButton#actionButton {
-            background-color: #252D3B;
-            color: #E5EAF3;
-            border: 1px solid #3B4558;
+            background-color: #3B2636;
+            color: #FCE7F0;
+            border: 1px solid #654057;
             border-radius: 8px;
             padding: 11px;
         }
 
         QPushButton#themeButton:hover,
         QPushButton#actionButton:hover {
-            background-color: #303D57;
+            background-color: #593349;
         }
 
         QLabel#pageTitle, QLabel#sectionTitle,
         QLabel#cardValue {
-            color: #F2F5FA;
+            color: #FFE4F0;
         }
 
         QLabel#pageTitle {
@@ -419,14 +421,14 @@ class MainWindow(QMainWindow):
         }
 
         QLabel#statusLabel {
-            color: #9AB9FF;
+            color: #F9A8D4;
             font-size: 11px;
             font-weight: bold;
         }
 
         QFrame#dashboardCard {
-            background-color: #1D2330;
-            border: 1px solid #303849;
+            background-color: #2C1B28;
+            border: 1px solid #493044;
             border-radius: 12px;
         }
 
@@ -436,7 +438,17 @@ class MainWindow(QMainWindow):
         }
 
         QLabel#cardDetail {
-            color: #A0AABD;
+            color: #D5B8C8;
             font-size: 11px;
         }
         """
+
+
+if __name__ == "__main__":
+    import sys
+    from PySide6.QtWidgets import QApplication
+
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
