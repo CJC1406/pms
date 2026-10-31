@@ -226,3 +226,49 @@ def test_cannot_add_batch_to_inactive_product(session, product):
             quantity_received=5,
             expiry_date=date(2027, 1, 31),
         )
+def test_adjust_stock_to_exactly_zero(session, product):
+    batch = add_batch(
+        session,
+        product_id=product.id,
+        batch_code="ZERO-001",
+        quantity_received=10,
+        expiry_date=date(2027, 3, 31),
+    )
+
+    adjusted = adjust_batch_stock(session, batch.id, -10)
+
+    assert adjusted.quantity_remaining == 0
+    assert get_total_stock(session, product.id) == 0
+
+
+def test_adjust_stock_rejects_boolean_quantity(session, product):
+    batch = add_batch(
+        session,
+        product_id=product.id,
+        batch_code="BOOL-001",
+        quantity_received=10,
+        expiry_date=date(2027, 3, 31),
+    )
+
+    with pytest.raises(ValueError, match="non-zero integer"):
+        adjust_batch_stock(session, batch.id, True)
+
+
+def test_adjust_stock_rejects_unknown_batch(session):
+    with pytest.raises(ValueError, match="does not exist"):
+        adjust_batch_stock(session, 9999, -1)
+
+
+def test_update_rejects_non_decimal_price(session, product):
+    with pytest.raises(ValueError, match="Decimal"):
+        update_product(
+            session,
+            product.id,
+            selling_price=15.00,
+        )
+
+
+def test_update_rejects_unknown_product(session):
+    with pytest.raises(ValueError, match="does not exist"):
+        update_product(session, 9999, name="Apple")
+
