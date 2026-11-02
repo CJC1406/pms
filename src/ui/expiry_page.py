@@ -1,4 +1,6 @@
 
+from datetime import date
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget,
@@ -13,7 +15,11 @@ from PySide6.QtWidgets import (
     QSpinBox,
 )
 
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+
 from src.database.db import SessionLocal
+from src.models.batch import Batch
 from src.services.expiry_service import (
     get_expired_batches,
     get_expiring_batches,
@@ -173,15 +179,15 @@ class ExpiryPage(QWidget):
                         )
 
                 else:
-                    batches = (
-                        expired
-                        + expiring
-                    )
+                    # Show every batch, regardless of expiry date.
+                    batches = session.scalars(
+                        select(Batch)
+                        .options(selectinload(Batch.product))
+                        .order_by(Batch.expiry_date, Batch.id)
+                    ).all()
 
                 # Capture values while the database session is open.
                 rows = []
-                from datetime import date
-
                 today = date.today()
 
                 for batch in batches:
@@ -194,7 +200,7 @@ class ExpiryPage(QWidget):
                         status = "Expired"
                     elif days_left == 0:
                         status = "Expires Today"
-                    elif days_left <= 7:
+                    elif days_left <= self.days_input.value():
                         status = "Expiring Soon"
                     else:
                         status = "Safe"
