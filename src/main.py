@@ -1,11 +1,15 @@
+
 import sys
 
 from PySide6.QtWidgets import QApplication
 
+from src.database.db import init_db
 from src.ui.main_window import MainWindow
 
 
 def main():
+    init_db()
+
     app = QApplication(sys.argv)
     app.setApplicationName("Perishables Management System")
 

@@ -12,8 +12,18 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
+from src.database.db import SessionLocal
+from src.services.inventory_service import (
+    list_products,
+    get_total_stock,
+)
+from src.services.expiry_service import get_expiring_batches
+from src.ui.inventory_page import InventoryPage
+from src.ui.expiry_page import ExpiryPage
+
 
 class MainWindow(QMainWindow):
+
     def __init__(self):
         super().__init__()
 
@@ -54,8 +64,8 @@ class MainWindow(QMainWindow):
 
         navigation = [
             ("Dashboard", self.create_dashboard),
-            ("Inventory", self.create_placeholder),
-            ("Expiry Tracking", self.create_placeholder),
+            ("Inventory", InventoryPage),
+            ("Expiry Tracking", ExpiryPage),
             ("Waste Management", self.create_placeholder),
             ("Reports", self.create_placeholder),
         ]
@@ -69,6 +79,7 @@ class MainWindow(QMainWindow):
             button.clicked.connect(
                 lambda checked=False, i=index: self.change_page(i)
             )
+
             sidebar_layout.addWidget(button)
             self.nav_buttons.append(button)
 
@@ -125,15 +136,21 @@ class MainWindow(QMainWindow):
         cards_layout = QGridLayout()
         cards_layout.setSpacing(16)
 
+        self.dashboard_values = {}
+
         cards = [
-            ("Total Products", "128", "Products in catalogue"),
-            ("Low Stock", "12", "Products need attention"),
-            ("Expiring Soon", "8", "Batches nearing expiry"),
-            ("Waste This Month", "₹2,450", "Illustrative value"),
+            ("Total Products", "0", "Active products in catalogue"),
+            ("Low Stock", "0", "Products needing attention"),
+            ("Expiring Soon", "0", "Batches expiring within 7 days"),
+            ("Waste This Month", "N/A", "Waste tracking not implemented"),
         ]
 
         for index, (heading, value, detail) in enumerate(cards):
             card = self.create_card(heading, value, detail)
+
+            value_label = card.findChild(QLabel, "cardValue")
+            self.dashboard_values[heading] = value_label
+
             cards_layout.addWidget(card, index // 2, index % 2)
 
         layout.addLayout(cards_layout)
@@ -163,7 +180,47 @@ class MainWindow(QMainWindow):
         layout.addLayout(actions_layout)
         layout.addStretch()
 
+        self.refresh_dashboard()
+
         return page
+
+    def refresh_dashboard(self):
+        """Update dashboard statistics from the database."""
+
+        try:
+            with SessionLocal() as session:
+                products = list_products(session)
+
+                total_products = len(products)
+                low_stock = 0
+
+                for product in products:
+                    stock = get_total_stock(session, product.id)
+
+                    if stock <= product.low_stock_threshold:
+                        low_stock += 1
+
+                expiring_soon = len(
+                    get_expiring_batches(session, days=7)
+                )
+
+            self.dashboard_values["Total Products"].setText(
+                str(total_products)
+            )
+
+            self.dashboard_values["Low Stock"].setText(
+                str(low_stock)
+            )
+
+            self.dashboard_values["Expiring Soon"].setText(
+                str(expiring_soon)
+            )
+
+        except Exception as exc:
+            for label in self.dashboard_values.values():
+                label.setText("Error")
+
+            print(f"Dashboard update failed: {exc}")
 
     def create_card(self, heading, value, detail):
         card = QFrame()
@@ -190,6 +247,7 @@ class MainWindow(QMainWindow):
 
     def create_placeholder(self, page_name):
         page = QWidget()
+
         layout = QVBoxLayout(page)
         layout.setContentsMargins(32, 28, 32, 28)
         layout.setSpacing(16)
@@ -199,14 +257,15 @@ class MainWindow(QMainWindow):
         layout.addWidget(title)
 
         message = QLabel(
-            f"The {page_name.lower()} module will be implemented in a "
-            "future development step."
+            f"The {page_name.lower()} module will be implemented "
+            "in a future development step."
         )
         message.setObjectName("description")
         message.setWordWrap(True)
         layout.addWidget(message)
 
         layout.addStretch()
+
         return page
 
     def change_page(self, index):
@@ -216,6 +275,9 @@ class MainWindow(QMainWindow):
             button.setProperty("active", button_index == index)
             button.style().unpolish(button)
             button.style().polish(button)
+
+        if index == 0:
+            self.refresh_dashboard()
 
     def toggle_theme(self):
         self.dark_mode = not self.dark_mode
