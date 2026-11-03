@@ -18,7 +18,7 @@ def _money(value: Decimal) -> Decimal:
     return value.quantize(CENT, rounding=ROUND_HALF_UP)
 
 
-def generate_invoice(
+def create_invoice_record(
     session: Session,
     *,
     cashier: str,
@@ -26,16 +26,7 @@ def generate_invoice(
     customer_mobile: str | None = None,
     customer_email: str | None = None,
 ) -> Invoice:
-    """
-    Create and persist an invoice from checkout items.
-
-    Each item must contain:
-        product_id: int
-        quantity: positive int
-
-    Prices are captured from the product selling price at invoice time.
-    This function does not deduct stock or send email.
-    """
+    """Create an invoice in the current transaction without committing."""
 
     if not isinstance(cashier, str) or not cashier.strip():
         raise ValueError("Cashier cannot be blank.")
@@ -81,9 +72,7 @@ def generate_invoice(
         )
 
         if product is None:
-            raise ValueError(
-                f"Active product {product_id} does not exist."
-            )
+            raise ValueError(f"Active product {product_id} does not exist.")
 
         unit_price = _money(Decimal(product.selling_price))
         line_total = _money(unit_price * quantity)
@@ -103,39 +92,67 @@ def generate_invoice(
     subtotal = _money(subtotal)
 
     invoice = Invoice(
-        invoice_number=f"PMS-{datetime.now(timezone.utc):%Y%m%d}-{uuid4().hex[:12].upper()}",
+        invoice_number=(
+            f"PMS-{datetime.now(timezone.utc):%Y%m%d}-"
+            f"{uuid4().hex[:12].upper()}"
+        ),
         created_at=datetime.now(timezone.utc),
         cashier=cashier.strip(),
-        customer_mobile=customer_mobile.strip() if customer_mobile and customer_mobile.strip() else None,
-        customer_email=customer_email.strip() if customer_email and customer_email.strip() else None,
+        customer_mobile=(
+            customer_mobile.strip()
+            if customer_mobile and customer_mobile.strip()
+            else None
+        ),
+        customer_email=(
+            customer_email.strip()
+            if customer_email and customer_email.strip()
+            else None
+        ),
         subtotal=subtotal,
         total=subtotal,
         items=invoice_items,
     )
 
     session.add(invoice)
-
-    try:
-        session.commit()
-        session.refresh(invoice)
-    except Exception:
-        session.rollback()
-        raise
+    session.flush()
 
     return invoice
 
 
-def get_invoice(
+def generate_invoice(
     session: Session,
-    invoice_id: int,
-) -> Invoice | None:
+    *,
+    cashier: str,
+    items: list[dict],
+    customer_mobile: str | None = None,
+    customer_email: str | None = None,
+) -> Invoice:
+    """Create and persist an invoice independently of inventory."""
+
+    try:
+        invoice = create_invoice_record(
+            session,
+            cashier=cashier,
+            items=items,
+            customer_mobile=customer_mobile,
+            customer_email=customer_email,
+        )
+        session.commit()
+        session.refresh(invoice)
+        return invoice
+    except Exception:
+        session.rollback()
+        raise
+
+
+def get_invoice(session: Session, invoice_id: int) -> Invoice | None:
     """Retrieve an invoice and its persisted line items."""
+
     statement = (
         select(Invoice)
         .options(selectinload(Invoice.items))
         .where(Invoice.id == invoice_id)
     )
-
     return session.scalar(statement)
 
 
@@ -144,10 +161,10 @@ def get_invoice_by_number(
     invoice_number: str,
 ) -> Invoice | None:
     """Retrieve an invoice using its unique invoice number."""
+
     statement = (
         select(Invoice)
         .options(selectinload(Invoice.items))
         .where(Invoice.invoice_number == invoice_number)
     )
-
     return session.scalar(statement)
