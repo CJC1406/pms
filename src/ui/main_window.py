@@ -13,11 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from src.database.db import SessionLocal
-from src.services.inventory_service import (
-    list_products,
-    get_total_stock,
-)
-from src.services.expiry_service import get_expiring_batches
+from src.services.dashboard_service import get_dashboard_summary
 from src.ui.inventory_page import InventoryPage
 from src.ui.expiry_page import ExpiryPage
 from src.ui.cart_page import CartPage
@@ -119,6 +115,12 @@ class MainWindow(QMainWindow):
 
         header.addStretch()
 
+        refresh_button = QPushButton("Refresh Dashboard")
+        refresh_button.setObjectName("actionButton")
+        refresh_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        refresh_button.clicked.connect(self.refresh_dashboard)
+        header.addWidget(refresh_button)
+
         status = QLabel("STORE OVERVIEW")
         status.setObjectName("statusLabel")
         header.addWidget(status)
@@ -126,12 +128,12 @@ class MainWindow(QMainWindow):
         layout.addLayout(header)
 
         description = QLabel(
-            "Monitor stock levels, upcoming expiries, and product waste."
+            "Monitor stock levels, upcoming expiries, daily sales, and waste."
         )
         description.setObjectName("description")
         layout.addWidget(description)
 
-        section_title = QLabel("Inventory Overview")
+        section_title = QLabel("Store Overview")
         section_title.setObjectName("sectionTitle")
         layout.addWidget(section_title)
 
@@ -144,15 +146,15 @@ class MainWindow(QMainWindow):
             ("Total Products", "0", "Active products in catalogue"),
             ("Low Stock", "0", "Products needing attention"),
             ("Expiring Soon", "0", "Batches expiring within 7 days"),
+            ("Daily Sales", "?0.00", "Sales recorded today"),
+            ("Invoices Today", "0", "Invoices generated today"),
             ("Waste This Month", "N/A", "Waste tracking not implemented"),
         ]
 
         for index, (heading, value, detail) in enumerate(cards):
             card = self.create_card(heading, value, detail)
-
             value_label = card.findChild(QLabel, "cardValue")
             self.dashboard_values[heading] = value_label
-
             cards_layout.addWidget(card, index // 2, index % 2)
 
         layout.addLayout(cards_layout)
@@ -166,8 +168,8 @@ class MainWindow(QMainWindow):
 
         actions = [
             ("View Inventory", 1),
-            ("Check Expiry", 2),
-            ("Record Waste", 3),
+            ("Check Expiry", 3),
+            ("Waste Management", 4),
         ]
 
         for text, page_index in actions:
@@ -187,35 +189,29 @@ class MainWindow(QMainWindow):
         return page
 
     def refresh_dashboard(self):
-        """Update dashboard statistics from the database."""
+        """Refresh dashboard statistics using stored database records."""
 
         try:
             with SessionLocal() as session:
-                products = list_products(session)
-
-                total_products = len(products)
-                low_stock = 0
-
-                for product in products:
-                    stock = get_total_stock(session, product.id)
-
-                    if stock <= product.low_stock_threshold:
-                        low_stock += 1
-
-                expiring_soon = len(
-                    get_expiring_batches(session, days=7)
-                )
+                summary = get_dashboard_summary(session)
 
             self.dashboard_values["Total Products"].setText(
-                str(total_products)
+                str(summary["total_products"])
             )
-
             self.dashboard_values["Low Stock"].setText(
-                str(low_stock)
+                str(summary["low_stock"])
             )
-
             self.dashboard_values["Expiring Soon"].setText(
-                str(expiring_soon)
+                str(summary["expiring_batches"])
+            )
+            self.dashboard_values["Daily Sales"].setText(
+                f"?{summary['daily_sales']:,.2f}"
+            )
+            self.dashboard_values["Invoices Today"].setText(
+                str(summary["invoice_count"])
+            )
+            self.dashboard_values["Waste This Month"].setText(
+                "N/A"
             )
 
         except Exception as exc:
