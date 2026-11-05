@@ -11,13 +11,14 @@ from PySide6.QtWidgets import (
 
 from src.database.db import SessionLocal
 from src.services.inventory_service import list_products, get_total_stock
+from src.services.employee_service import list_employees
+from src.services.checkout_service import complete_checkout
 from src.services.cart_service import (
     add_cart_item,
     update_cart_quantity,
     remove_cart_item,
     calculate_cart_totals,
 )
-from src.services.invoice_service import generate_invoice
 from src.services.invoice_export_service import export_invoice_html
 from src.services.email_service import send_invoice_email
 
@@ -25,8 +26,10 @@ from src.services.email_service import send_invoice_email
 class CartPage(QWidget):
     def __init__(self, page_name="POS / Cart", parent=None):
         super().__init__(parent)
+
         self.cart = {}
         self.products = {}
+        self.employees = {}
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(32, 28, 32, 28)
@@ -36,7 +39,9 @@ class CartPage(QWidget):
         title.setObjectName("pageTitle")
         layout.addWidget(title)
 
-        description = QLabel("Select products, edit quantities and checkout.")
+        description = QLabel(
+            "Select products, edit quantities and checkout."
+        )
         description.setObjectName("description")
         layout.addWidget(description)
 
@@ -65,7 +70,8 @@ class CartPage(QWidget):
 
         self.table = QTableWidget(0, 6)
         self.table.setHorizontalHeaderLabels([
-            "Product", "SKU", "Quantity", "Unit Price", "Line Total", "Action"
+            "Product", "SKU", "Quantity",
+            "Unit Price", "Line Total", "Action"
         ])
         self.table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
@@ -78,12 +84,18 @@ class CartPage(QWidget):
         settings_row = QHBoxLayout()
 
         settings_row.addWidget(QLabel("Cashier:"))
-        self.cashier_input = QLineEdit()
-        self.cashier_input.setPlaceholderText("Enter cashier name")
-        self.cashier_input.setText("Cashier")
-        settings_row.addWidget(self.cashier_input)
+
+        self.employee_combo = QComboBox()
+        self.employee_combo.setMinimumWidth(180)
+        settings_row.addWidget(self.employee_combo)
+
+        refresh_employees_button = QPushButton("Refresh Employees")
+        refresh_employees_button.setObjectName("actionButton")
+        refresh_employees_button.clicked.connect(self.load_employees)
+        settings_row.addWidget(refresh_employees_button)
 
         settings_row.addWidget(QLabel("Tax (%):"))
+
         self.tax_input = QDoubleSpinBox()
         self.tax_input.setRange(0, 100)
         self.tax_input.setDecimals(2)
@@ -92,6 +104,7 @@ class CartPage(QWidget):
         settings_row.addWidget(self.tax_input)
 
         settings_row.addWidget(QLabel("Discount (%):"))
+
         self.discount_input = QDoubleSpinBox()
         self.discount_input.setRange(0, 100)
         self.discount_input.setDecimals(2)
@@ -101,7 +114,6 @@ class CartPage(QWidget):
 
         layout.addLayout(settings_row)
 
-        # Optional customer email for invoice delivery.
         email_row = QHBoxLayout()
         email_row.addWidget(QLabel("Customer Email:"))
 
@@ -140,6 +152,7 @@ class CartPage(QWidget):
         layout.addStretch()
 
         self.load_products()
+        self.load_employees()
 
     def load_products(self):
         self.product_combo.clear()
@@ -166,11 +179,39 @@ class CartPage(QWidget):
         except Exception as exc:
             QMessageBox.critical(self, "Product Error", str(exc))
 
+    def load_employees(self):
+        self.employee_combo.clear()
+        self.employees = {}
+
+        self.employee_combo.addItem("Select cashier", None)
+
+        try:
+            with SessionLocal() as session:
+                employees = list_employees(
+                    session,
+                    active_only=True,
+                )
+
+                for employee in employees:
+                    self.employees[employee.id] = employee
+
+                    self.employee_combo.addItem(
+                        f"{employee.full_name} ({employee.employee_code})",
+                        employee.id,
+                    )
+
+        except Exception as exc:
+            QMessageBox.critical(self, "Employee Error", str(exc))
+
     def add_selected_product(self):
         product_id = self.product_combo.currentData()
 
         if product_id is None:
-            QMessageBox.warning(self, "No Product", "Select an available product.")
+            QMessageBox.warning(
+                self,
+                "No Product",
+                "Select an available product.",
+            )
             return
 
         try:
@@ -197,14 +238,19 @@ class CartPage(QWidget):
             row = self.table.rowCount()
             self.table.insertRow(row)
 
-            self.table.setItem(row, 0, QTableWidgetItem(item["product_name"]))
-            self.table.setItem(row, 1, QTableWidgetItem(item["sku"]))
+            self.table.setItem(
+                row, 0, QTableWidgetItem(item["product_name"])
+            )
+            self.table.setItem(
+                row, 1, QTableWidgetItem(item["sku"])
+            )
 
             quantity = QSpinBox()
             quantity.setRange(1, 999999)
             quantity.setValue(item["quantity"])
             quantity.valueChanged.connect(
-                lambda value, pid=product_id: self.change_quantity(pid, value)
+                lambda value, pid=product_id:
+                    self.change_quantity(pid, value)
             )
             self.table.setCellWidget(row, 2, quantity)
 
@@ -217,7 +263,8 @@ class CartPage(QWidget):
 
             remove_button = QPushButton("Remove")
             remove_button.clicked.connect(
-                lambda checked=False, pid=product_id: self.remove_item(pid)
+                lambda checked=False, pid=product_id:
+                    self.remove_item(pid)
             )
             self.table.setCellWidget(row, 5, remove_button)
 
@@ -240,6 +287,7 @@ class CartPage(QWidget):
             remove_cart_item(self.cart, product_id)
             self.refresh_table()
             self.update_totals()
+
         except ValueError as exc:
             QMessageBox.warning(self, "Cart Error", str(exc))
 
@@ -274,36 +322,48 @@ class CartPage(QWidget):
 
     def checkout(self):
         if not self.cart:
-            QMessageBox.warning(self, "Empty Cart", "Add products before checkout.")
+            QMessageBox.warning(
+                self,
+                "Empty Cart",
+                "Add products before checkout.",
+            )
             return
 
-        cashier = self.cashier_input.text().strip()
-        if not cashier:
-            QMessageBox.warning(self, "Missing Cashier", "Enter the cashier name.")
+        employee_id = self.employee_combo.currentData()
+
+        if employee_id is None:
+            QMessageBox.warning(
+                self,
+                "Missing Cashier",
+                "Select an active employee before checkout.",
+            )
             return
 
+        employee = self.employees.get(employee_id)
+
+        if employee is None:
+            QMessageBox.warning(
+                self,
+                "Invalid Cashier",
+                "Refresh employees and select an active cashier.",
+            )
+            return
+
+        cashier = employee.full_name
         customer_email = self.email_input.text().strip()
 
         try:
             with SessionLocal() as session:
-                # Recheck stock immediately before checkout.
-                for product_id, item in self.cart.items():
-                    current_stock = get_total_stock(session, product_id)
-                    if item["quantity"] > current_stock:
-                        raise ValueError(
-                            f'Insufficient stock for {item["product_name"]}. '
-                            f"Available: {current_stock}."
-                        )
-
                 totals = calculate_cart_totals(
                     list(self.cart.values()),
                     tax_rate=Decimal(str(self.tax_input.value())),
                     discount_rate=Decimal(str(self.discount_input.value())),
                 )
 
-                invoice = generate_invoice(
+                invoice = complete_checkout(
                     session,
                     cashier=cashier,
+                    employee_id=employee_id,
                     customer_email=customer_email or None,
                     items=[
                         {
@@ -314,14 +374,14 @@ class CartPage(QWidget):
                     ],
                 )
 
-                # Store the final amount including tax and discount.
                 invoice.total = totals["total"]
                 session.commit()
 
                 invoice_number = invoice.invoice_number
 
-                # Export the invoice before closing the database session.
-                invoice_dir = Path(tempfile.gettempdir()) / "pms_invoices"
+                invoice_dir = (
+                    Path(tempfile.gettempdir()) / "pms_invoices"
+                )
                 invoice_dir.mkdir(parents=True, exist_ok=True)
 
                 invoice_path = export_invoice_html(
@@ -329,7 +389,6 @@ class CartPage(QWidget):
                     invoice_dir / f"{invoice_number}.html",
                 )
 
-            # The invoice is already saved. Email failure must not undo checkout.
             self.clear_cart()
             self.load_products()
 
@@ -356,6 +415,7 @@ class CartPage(QWidget):
                 self,
                 "Checkout Successful",
                 f"Invoice: {invoice_number}\n"
+                f"Cashier: {cashier}\n"
                 f"Subtotal: {totals['subtotal']:.2f}\n"
                 f"Discount: {totals['discount_amount']:.2f}\n"
                 f"Tax: {totals['tax_amount']:.2f}\n"

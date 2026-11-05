@@ -17,7 +17,7 @@ from src.services.dashboard_service import get_dashboard_summary
 from src.ui.inventory_page import InventoryPage
 from src.ui.expiry_page import ExpiryPage
 from src.ui.cart_page import CartPage
-
+from src.ui.employee_page import EmployeePage
 
 class MainWindow(QMainWindow):
 
@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
             ("Expiry Tracking", ExpiryPage),
             ("Waste Management", self.create_placeholder),
             ("Reports", self.create_placeholder),
+	    ("Employee Management", EmployeePage),
         ]
 
         self.nav_buttons = []
