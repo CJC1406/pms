@@ -1,4 +1,7 @@
+
 from decimal import Decimal
+from pathlib import Path
+import tempfile
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
@@ -15,6 +18,8 @@ from src.services.cart_service import (
     calculate_cart_totals,
 )
 from src.services.invoice_service import generate_invoice
+from src.services.invoice_export_service import export_invoice_html
+from src.services.email_service import send_invoice_email
 
 
 class CartPage(QWidget):
@@ -96,6 +101,18 @@ class CartPage(QWidget):
 
         layout.addLayout(settings_row)
 
+        # Optional customer email for invoice delivery.
+        email_row = QHBoxLayout()
+        email_row.addWidget(QLabel("Customer Email:"))
+
+        self.email_input = QLineEdit()
+        self.email_input.setPlaceholderText(
+            "Enter customer email (optional)"
+        )
+        email_row.addWidget(self.email_input)
+
+        layout.addLayout(email_row)
+
         self.subtotal_label = QLabel("Subtotal: 0.00")
         self.discount_label = QLabel("Discount: 0.00")
         self.tax_label = QLabel("Tax: 0.00")
@@ -158,7 +175,7 @@ class CartPage(QWidget):
 
         try:
             with SessionLocal() as session:
-                item = add_cart_item(
+                add_cart_item(
                     session,
                     self.cart,
                     product_id,
@@ -265,6 +282,8 @@ class CartPage(QWidget):
             QMessageBox.warning(self, "Missing Cashier", "Enter the cashier name.")
             return
 
+        customer_email = self.email_input.text().strip()
+
         try:
             with SessionLocal() as session:
                 # Recheck stock immediately before checkout.
@@ -285,6 +304,7 @@ class CartPage(QWidget):
                 invoice = generate_invoice(
                     session,
                     cashier=cashier,
+                    customer_email=customer_email or None,
                     items=[
                         {
                             "product_id": item["product_id"],
@@ -300,8 +320,37 @@ class CartPage(QWidget):
 
                 invoice_number = invoice.invoice_number
 
+                # Export the invoice before closing the database session.
+                invoice_dir = Path(tempfile.gettempdir()) / "pms_invoices"
+                invoice_dir.mkdir(parents=True, exist_ok=True)
+
+                invoice_path = export_invoice_html(
+                    invoice,
+                    invoice_dir / f"{invoice_number}.html",
+                )
+
+            # The invoice is already saved. Email failure must not undo checkout.
             self.clear_cart()
             self.load_products()
+
+            email_message = ""
+
+            if customer_email:
+                try:
+                    send_invoice_email(
+                        customer_email,
+                        invoice_number,
+                        invoice_path,
+                    )
+                    email_message = (
+                        f"\nEmail delivery: accepted for {customer_email}."
+                    )
+                except Exception as email_error:
+                    email_message = (
+                        "\nInvoice was saved, but email delivery failed: "
+                        f"{email_error}\n"
+                        "The invoice remains available in the system."
+                    )
 
             QMessageBox.information(
                 self,
@@ -310,7 +359,8 @@ class CartPage(QWidget):
                 f"Subtotal: {totals['subtotal']:.2f}\n"
                 f"Discount: {totals['discount_amount']:.2f}\n"
                 f"Tax: {totals['tax_amount']:.2f}\n"
-                f"Total: {totals['total']:.2f}",
+                f"Total: {totals['total']:.2f}"
+                f"{email_message}",
             )
 
         except ValueError as exc:
