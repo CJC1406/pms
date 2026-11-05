@@ -1,4 +1,5 @@
-﻿from datetime import date, datetime, time, timedelta, timezone
+
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
 from sqlalchemy import func, select
@@ -6,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from src.models.invoice import Invoice
 from src.models.product import Product
+from src.models.waste import WasteRecord
 from src.services.expiry_service import get_expiring_batches
 from src.services.inventory_service import get_total_stock, list_products
 
@@ -56,6 +58,24 @@ def get_dashboard_summary(
         )
     )
 
+    month_start = datetime.combine(
+        today.replace(day=1),
+        time.min,
+        tzinfo=timezone.utc,
+    )
+
+    monthly_waste_cost = session.scalar(
+        select(
+            func.coalesce(
+                func.sum(WasteRecord.quantity * WasteRecord.unit_cost),
+                0,
+            )
+        ).where(
+            WasteRecord.recorded_at >= month_start,
+            WasteRecord.recorded_at < end,
+        )
+    )
+
     return {
         "total_products": total_products,
         "low_stock": low_stock,
@@ -63,5 +83,5 @@ def get_dashboard_summary(
         "expiring_quantity": expiring_quantity,
         "daily_sales": Decimal(str(daily_sales or 0)),
         "invoice_count": invoice_count or 0,
-        "waste_status": "Not implemented",
+        "monthly_waste_cost": Decimal(str(monthly_waste_cost or 0)),
     }
