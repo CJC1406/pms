@@ -1,3 +1,4 @@
+
 from pathlib import Path
 
 from sqlalchemy import create_engine
@@ -30,9 +31,11 @@ class Base(DeclarativeBase):
 
 def init_db() -> None:
     """Create database tables for all registered models."""
+
     # Import models only after Base has been defined.
     from src.models.batch import Batch  # noqa: F401
     from src.models.product import Product  # noqa: F401
+    from src.models.employee import Employee  # noqa: F401
     from src.models.invoice import Invoice, InvoiceItem  # noqa: F401
 
     Base.metadata.create_all(bind=engine)

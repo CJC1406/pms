@@ -44,6 +44,17 @@ class Invoice(Base):
 
     cashier: Mapped[str] = mapped_column(String(150), nullable=False)
 
+    employee_id: Mapped[int | None] = mapped_column(
+        ForeignKey("employees.id"),
+        nullable=True,
+        index=True,
+    )
+
+    employee: Mapped["Employee | None"] = relationship(
+        "Employee",
+        back_populates="invoices",
+    )
+
     customer_mobile: Mapped[str | None] = mapped_column(
         String(30),
         nullable=True,
