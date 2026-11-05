@@ -31,9 +31,7 @@ def create_employee(
         raise ValueError("Employee role cannot be blank.")
 
     existing_code = session.scalar(
-        select(Employee).where(
-            Employee.employee_code == employee_code
-        )
+        select(Employee).where(Employee.employee_code == employee_code)
     )
     if existing_code:
         raise ValueError("Employee code already exists.")
@@ -149,6 +147,23 @@ def deactivate_employee(
         raise ValueError("Employee does not exist.")
 
     employee.is_active = False
+
+    session.commit()
+    session.refresh(employee)
+
+    return employee
+
+
+def activate_employee(
+    session: Session,
+    employee_id: int,
+) -> Employee:
+    employee = get_employee(session, employee_id)
+
+    if employee is None:
+        raise ValueError("Employee not found.")
+
+    employee.is_active = True
 
     session.commit()
     session.refresh(employee)
