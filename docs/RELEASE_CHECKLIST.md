@@ -119,3 +119,18 @@ Do not mark SCRUM-53 Done until:
 4. The final Jira status and comments accurately reflect the result.
 
 The release evidence above records the state reported on 6 November 2026. Recheck the repository and CI before final submission.
+
+## 11. Feature freeze declaration
+
+**Freeze status:** Active  
+**Freeze date:** 7 November 2026  
+**Purpose:** Final evaluation preparation for 9 November 2026.
+
+- No new features or scope expansion after the freeze.
+- No unnecessary architectural or dependency changes.
+- Only critical bug fixes are permitted.
+- Any critical fix must be tested, reviewed and documented.
+- Existing demo video, test evidence and release documentation are preserved.
+- The final evaluation will use the frozen release from the main branch.
+
+**Team approval:** All four team members have approved the final deliverables.
