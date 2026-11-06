@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
     QStackedWidget,
+    QAbstractSpinBox,
 )
 
 from src.database.db import SessionLocal
@@ -83,6 +84,13 @@ class MainWindow(QMainWindow):
             self.nav_buttons.append(button)
 
             page = page_creator(name)
+
+            # Explicitly enable native increment/decrement arrows.
+            for control in page.findChildren(QAbstractSpinBox):
+                control.setButtonSymbols(
+                    QAbstractSpinBox.ButtonSymbols.UpDownArrows
+                )
+
             self.pages.addWidget(page)
 
         sidebar_layout.addStretch()
@@ -260,6 +268,9 @@ class MainWindow(QMainWindow):
             font-family: Arial;
             font-size: 14px;
         }
+        QLabel {
+            background-color: transparent;
+        }
 
         QFrame#sidebar {
             background-color: #FFFFFF;
@@ -346,19 +357,25 @@ class MainWindow(QMainWindow):
         }
 
         QLabel#cardHeading {
+            background: transparent;
+            border: none;
             color: #876579;
-            font-size: 12px;
+            font-size: 13px;
         }
 
         QLabel#cardValue {
+            background: transparent;
+            border: none;
             color: #9D174D;
-            font-size: 28px;
+            font-size: 30px;
             font-weight: bold;
         }
 
         QLabel#cardDetail {
+            background: transparent;
+            border: none;
             color: #9B7C8C;
-            font-size: 11px;
+            font-size: 12px;
         }
 
         QPushButton#actionButton {
@@ -378,14 +395,6 @@ class MainWindow(QMainWindow):
             padding: 7px;
             selection-background-color: #DB2777;
             selection-color: #FFFFFF;
-        }
-
-        QSpinBox::up-button, QDoubleSpinBox::up-button,
-        QDateEdit::up-button, QSpinBox::down-button,
-        QDoubleSpinBox::down-button, QDateEdit::down-button {
-            background-color: #FCE7F0;
-            border: none;
-            width: 22px;
         }
 
 QTableWidget {
@@ -414,6 +423,9 @@ QTableWidget {
             color: #FCE7F0;
             font-family: Arial;
             font-size: 14px;
+        }
+        QLabel {
+            background-color: transparent;
         }
 
         QFrame#sidebar {
@@ -466,6 +478,8 @@ QTableWidget {
 
         QLabel#pageTitle, QLabel#sectionTitle,
         QLabel#cardValue {
+            background: transparent;
+            border: none;
             color: #FFE4F0;
         }
 
@@ -493,11 +507,15 @@ QTableWidget {
         }
 
         QLabel#cardValue {
-            font-size: 28px;
+            background: transparent;
+            border: none;
+            font-size: 30px;
             font-weight: bold;
         }
 
         QLabel#cardDetail {
+            background: transparent;
+            border: none;
             color: #D5B8C8;
             font-size: 12px;
         }
@@ -510,14 +528,6 @@ QTableWidget {
             padding: 7px;
             selection-background-color: #DB2777;
             selection-color: #FFFFFF;
-        }
-
-        QSpinBox::up-button, QDoubleSpinBox::up-button,
-        QDateEdit::up-button, QSpinBox::down-button,
-        QDoubleSpinBox::down-button, QDateEdit::down-button {
-            background-color: #593349;
-            border: none;
-            width: 22px;
         }
 
 QTableWidget {
