@@ -6,6 +6,7 @@ from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.models.employee import Employee
 from src.models.invoice import Invoice, InvoiceItem
 from src.models.product import Product
 
@@ -25,8 +26,18 @@ def create_invoice_record(
     items: list[dict],
     customer_mobile: str | None = None,
     customer_email: str | None = None,
+    employee_id: int | None = None,
 ) -> Invoice:
-    """Create an invoice in the current transaction without committing."""
+    """
+    Create and persist an invoice from checkout items.
+
+    Each item must contain:
+        product_id: int
+        quantity: positive int
+
+    Prices and product details are captured at invoice time.
+    This function does not deduct stock or send email.
+    """
 
     if not isinstance(cashier, str) or not cashier.strip():
         raise ValueError("Cashier cannot be blank.")
@@ -39,6 +50,26 @@ def create_invoice_record(
 
     if customer_email is not None and not isinstance(customer_email, str):
         raise ValueError("Customer email must be text or None.")
+
+    employee = None
+
+    if employee_id is not None:
+        if (
+            isinstance(employee_id, bool)
+            or not isinstance(employee_id, int)
+            or employee_id <= 0
+        ):
+            raise ValueError("Employee ID must be a positive integer.")
+
+        employee = session.get(Employee, employee_id)
+
+        if employee is None:
+            raise ValueError("Employee does not exist.")
+
+        if not employee.is_active:
+            raise ValueError("Inactive employees cannot process sales.")
+
+        cashier = employee.full_name
 
     invoice_items: list[InvoiceItem] = []
     subtotal = Decimal("0.00")
@@ -72,7 +103,9 @@ def create_invoice_record(
         )
 
         if product is None:
-            raise ValueError(f"Active product {product_id} does not exist.")
+            raise ValueError(
+                f"Active product {product_id} does not exist."
+            )
 
         unit_price = _money(Decimal(product.selling_price))
         line_total = _money(unit_price * quantity)
@@ -98,6 +131,7 @@ def create_invoice_record(
         ),
         created_at=datetime.now(timezone.utc),
         cashier=cashier.strip(),
+        employee_id=employee.id if employee else None,
         customer_mobile=(
             customer_mobile.strip()
             if customer_mobile and customer_mobile.strip()
@@ -126,6 +160,7 @@ def generate_invoice(
     items: list[dict],
     customer_mobile: str | None = None,
     customer_email: str | None = None,
+    employee_id: int | None = None,
 ) -> Invoice:
     """Create and persist an invoice independently of inventory."""
 
@@ -136,23 +171,34 @@ def generate_invoice(
             items=items,
             customer_mobile=customer_mobile,
             customer_email=customer_email,
+            employee_id=employee_id,
         )
+
         session.commit()
         session.refresh(invoice)
+
         return invoice
+
     except Exception:
         session.rollback()
         raise
 
 
-def get_invoice(session: Session, invoice_id: int) -> Invoice | None:
+def get_invoice(
+    session: Session,
+    invoice_id: int,
+) -> Invoice | None:
     """Retrieve an invoice and its persisted line items."""
 
     statement = (
         select(Invoice)
-        .options(selectinload(Invoice.items))
+        .options(
+            selectinload(Invoice.items),
+            selectinload(Invoice.employee),
+        )
         .where(Invoice.id == invoice_id)
     )
+
     return session.scalar(statement)
 
 
@@ -164,7 +210,11 @@ def get_invoice_by_number(
 
     statement = (
         select(Invoice)
-        .options(selectinload(Invoice.items))
+        .options(
+            selectinload(Invoice.items),
+            selectinload(Invoice.employee),
+        )
         .where(Invoice.invoice_number == invoice_number)
     )
+
     return session.scalar(statement)

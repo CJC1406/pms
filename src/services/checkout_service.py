@@ -1,3 +1,4 @@
+
 from datetime import date
 
 from sqlalchemy import select, update
@@ -15,6 +16,7 @@ def complete_checkout(
     items: list[dict],
     customer_mobile: str | None = None,
     customer_email: str | None = None,
+    employee_id: int | None = None,
     as_of: date | None = None,
 ):
     """Create an invoice and deduct valid stock in one transaction."""
@@ -63,7 +65,9 @@ def complete_checkout(
         )
 
         if len(products) != len(product_ids):
-            raise ValueError("Checkout contains a missing or inactive product.")
+            raise ValueError(
+                "Checkout contains a missing or inactive product."
+            )
 
         batch_allocations: list[tuple[int, int]] = []
         today = as_of or date.today()
@@ -85,7 +89,9 @@ def complete_checkout(
                 ).all()
             )
 
-            available = sum(batch.quantity_remaining for batch in batches)
+            available = sum(
+                batch.quantity_remaining for batch in batches
+            )
 
             if requested > available:
                 raise ValueError(
@@ -103,7 +109,7 @@ def complete_checkout(
                 batch_allocations.append((batch.id, deduction))
                 remaining -= deduction
 
-        # Create invoice within the same transaction.
+        # Create invoice and record the selected employee.
         invoice = create_invoice_record(
             session,
             cashier=cashier,
@@ -116,9 +122,10 @@ def complete_checkout(
             ],
             customer_mobile=customer_mobile,
             customer_email=customer_email,
+            employee_id=employee_id,
         )
 
-        # Conditional updates protect against stock changing after validation.
+        # Deduct stock only after all validation succeeds.
         for batch_id, deduction in batch_allocations:
             result = session.execute(
                 update(Batch)
@@ -127,7 +134,9 @@ def complete_checkout(
                     Batch.quantity_remaining >= deduction,
                 )
                 .values(
-                    quantity_remaining=Batch.quantity_remaining - deduction
+                    quantity_remaining=(
+                        Batch.quantity_remaining - deduction
+                    )
                 )
             )
 

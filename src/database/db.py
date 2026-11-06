@@ -31,9 +31,11 @@ class Base(DeclarativeBase):
 
 def init_db() -> None:
     """Create database tables for all registered models."""
+
     # Import models only after Base has been defined.
     from src.models.batch import Batch  # noqa: F401
     from src.models.product import Product  # noqa: F401
+    from src.models.employee import Employee  # noqa: F401
     from src.models.invoice import Invoice, InvoiceItem  # noqa: F401
     from src.models.waste import WasteRecord  # noqa: F401
 
