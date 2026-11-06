@@ -1,218 +1,341 @@
-# Software Test Plan (STP)
-## Perishables Management System — Expanded Retail Operations Scope
+# Software Test Plan
+## Perishables Management System
 
 | Field | Value |
 |---|---|
-| Version | 1.0 — Expanded-scope draft |
-| Date | 5 November 2026 |
-| Authors | PMS Team |
-| Test plan owner | Member 4 — Chiranth, with all members testing their changes |
-| Status | Draft for peer review |
-| Test framework | pytest; pytest-qt where GUI tests are available |
+| Version | 1.2 |
+| Date | 6 November 2026 |
+| Authors | PMS Team — Deeksha, Chris, Janhavi, Chiranth |
+| Test plan owner | Member 3 — QA and CI |
+| Status | Updated draft — pending team sign-off |
+| Application | Python 3 / PySide6 / SQLAlchemy / SQLite |
+
+## Revision history
+
+| Version | Date | Summary |
+|---|---|---|
+| 1.0 | 5 Nov 2026 | Initial expanded-scope test plan |
+| 1.1 | 6 Nov 2026 | Updated release test evidence, employee feature status and outstanding test gaps |
+| 1.2 | 6 Nov 2026 | Aligned scope and invoice behaviour; added performance, checkout and usability results; updated regression and coverage metrics |
 
 ## 1. Introduction
 
 ### 1.1 Purpose
-Define test scope, strategy, environment, responsibilities, entry/exit criteria, test cases, security validation, metrics and traceability for the expanded PMS.
+
+This document defines the testing approach for the Perishables Management System (PMS). It identifies the features to be tested, test methods, test environment, test cases, responsibilities, execution evidence and release criteria.
 
 ### 1.2 Scope
-Testing covers product/batch inventory, expiry and FEFO, billing/checkout, invoices, employee profiles/cashier attribution, dashboard summaries and the planned waste-management workflow. Waste tests are design/acceptance cases until the feature is implemented.
+
+Testing covers the current implemented desktop application:
+
+- Product creation, viewing, updating and deactivation.
+- Batch receiving and stock calculations.
+- Low-stock and expiry information.
+- Expiry tracking and FEFO stock allocation.
+- POS cart and checkout.
+- Invoice generation, item snapshots and stock deduction.
+- Employee management and cashier-related workflows.
+- Dashboard summaries.
+- Application launch, persistence and regression behaviour.
+
+Waste management is excluded from the final project scope and is not part of this release's acceptance criteria. Authentication and role-based access control are reported by the team as implemented; security validation and permission testing remain deferred and are not claimed as passed.
 
 ### 1.3 References
-SRS.md, SAD.md, RTM.md, project scope/team plan, repository tests and the supplied evaluation checklist.
+
+- `SRS.md`
+- `SAD.md`
+- `RTM.md`
+- `README.md`
+- `PROJECT_SCOPE_AND_TEAM_PLAN.md`
+- Repository source code and automated tests
+- Project evaluation checklist
 
 ### 1.4 Definitions
-FEFO, POS, SKU, NFR, RTM, UAT, PII, RBAC.
+
+- FEFO: First Expired, First Out.
+- POS: Point of Sale.
+- CI: Continuous Integration.
+- UAT: User Acceptance Testing.
+- RTM: Requirements Traceability Matrix.
+- Regression testing: Re-running tests to detect unintended changes.
 
 ## 2. Test items
-- Product and batch inventory services/UI.
-- Expiry tracking and FEFO allocation.
-- Cart and checkout service/UI.
-- Invoice creation, export and optional email delivery.
-- Employee management and cashier attribution (SCRUM-48 branch pending PR).
-- Waste management (not implemented; planned test target).
-- Dashboard and reports.
-- Database transaction handling, input validation and security controls.
-- CI workflow and full pytest suite.
+
+The following application components are included:
+
+1. Product and inventory services.
+2. Batch and stock management.
+3. Expiry tracking and FEFO allocation.
+4. POS cart and checkout.
+5. Invoice generation and provision.
+6. Employee management.
+7. Dashboard summaries.
+8. SQLite persistence and database transactions.
+9. PySide6 user interface.
+10. Automated test suite and GitHub Actions workflow.
 
 ## 3. Features to be tested
 
-| Requirement IDs | Feature | Primary verification |
+| Requirement group | Features | Test references |
 |---|---|---|
-| PMS-FR-001–006 | Product/batch inventory and low-stock | Unit, integration and UI tests |
-| PMS-FR-007–011 | Expiry, FEFO and stock history | Unit and integration tests |
-| PMS-FR-012–019 | Cart, checkout, invoices and email | Unit, integration and end-to-end tests |
-| PMS-FR-020–024 | Employee profiles/status/attribution | Service and UI tests after SCRUM-48 merge |
-| PMS-FR-025–030 | Waste records and stock write-off | Planned tests; cannot pass until implemented |
-| PMS-FR-031–033 | Dashboard/report summaries | Service and UI tests |
-| PMS-NFR-001–008 | Performance, reliability, usability, maintainability, portability and durability | Timed runs, failure injection, UAT and review |
-| PMS-SEC-001–006 | Authentication, authorisation, privacy, validation and audit | Negative tests, log inspection and code review |
+| Product management | Product validation, unique SKU, update and deactivation | TC-001, TC-002 |
+| Batch and inventory | Batch receiving, quantity validation and available stock | TC-003 |
+| Expiry tracking | Expired and near-expiry batch identification | TC-004 |
+| FEFO and stock validation | Correct batch allocation and insufficient-stock rejection | TC-005, TC-006 |
+| POS and billing | Cart operations and total calculation | TC-007 |
+| Invoice and transaction | Invoice snapshots, stock deduction and rollback | TC-008, TC-009 |
+| Employee management | Employee lifecycle and cashier-related workflows | TC-010 |
+| Invoice output | Invoice generation/provision and optional customer contact fields; printing is not a required feature | TC-011 |
+| Waste management | Excluded from final project scope | TC-012 — out of scope |
+| Dashboard | Inventory, expiry and sales summaries | TC-013 |
+| Performance | Dashboard summary, product listing and checkout response targets | TC-014, TC-015 |
+| Usability | First-time checkout usability | TC-016 |
+| Data protection | Customer contact handling and configuration review | TC-017 |
+| Security | Authentication and role permissions | TC-018 — implementation not confirmed |
+| Validation | Invalid input and boundary cases | TC-019 |
+| Auditability | Stock and employee change history | TC-020 — partial/unverified |
 
-## 4. Features not to be tested / exclusions
-- External supplier systems, ERP integrations and payment gateway processing (not in current scope).
-- Barcode scanner, weighing scale and physical receipt-printer hardware unless added to the release.
-- Multi-store synchronisation, cloud hosting and production-scale load.
-- Real customer data and real payment information; use synthetic test data.
-- Email provider internals; test only PMS integration behaviour and failure handling.
-- Full authentication/RBAC behaviour cannot be accepted as implemented until those controls exist.
+## 4. Features not to be tested in this release
 
-## 5. Test approach / strategy
+The following are outside the verified operational release:
+
+- Waste recording, write-off and waste reporting (excluded from final project scope).
+- Security validation, including authentication/RBAC permission testing, is deferred; implementation is reported by the team but is not security-verified.
+- Multi-store or cloud deployment.
+- Multi-workstation concurrency.
+- External email-provider delivery under live credentials.
+- Production-scale performance and load behaviour.
+- Formal accessibility certification.
+
+These items must not be reported as passed merely because they are described in the SRS or SAD.
+
+## 5. Test approach and strategy
 
 ### 5.1 Test levels
-1. **Unit testing:** service validation, calculations, FEFO ordering, employee operations and waste calculations.
-2. **Integration testing:** checkout with invoice and batch deductions; employee-to-invoice attribution; proposed waste record with batch deduction.
-3. **System testing:** launch application and complete core user workflows through the UI.
-4. **Regression testing:** run full pytest suite after changes to shared inventory, checkout, employee or database code.
-5. **Acceptance testing:** team member acting as store user verifies agreed user stories and demo workflows.
+
+- **Unit testing:** Validate individual service functions and business rules.
+- **Integration testing:** Verify interactions between services, SQLAlchemy models and SQLite.
+- **System testing:** Run complete application workflows through the UI.
+- **Regression testing:** Re-run the automated suite after changes.
+- **Acceptance testing:** Verify the agreed core workflows and release criteria.
 
 ### 5.2 Test types
-- Functional and boundary-value testing.
-- Database integrity and transaction rollback testing.
+
+- Functional testing.
+- Boundary and invalid-input testing.
+- Database transaction and rollback testing.
+- UI smoke testing.
 - Regression testing.
-- UI usability and cross-platform smoke testing.
-- Performance checks against SRS NFR thresholds.
-- Security/privacy validation.
-- Compatibility checks on supported Windows and macOS environments.
+- Clean-checkout installation and launch verification.
+- Security-oriented configuration and data-handling review (deferred for this evaluation cycle).
+- Performance and usability testing.
 
 ### 5.3 Entry criteria
-- Feature branch is available and dependencies install.
-- Database test fixtures or isolated temporary SQLite database are available.
-- Requirements and acceptance criteria are identified.
-- Test data uses synthetic products, employees and customer contact values.
-- CI workflow is available for automated tests.
+
+- A testable application build is available.
+- Required dependencies can be installed.
+- Test database and test data are available.
+- Relevant requirements and test cases are documented.
+- The test environment is accessible.
 
 ### 5.4 Exit criteria
-- All release-critical planned tests executed.
-- 100% of P0 test cases pass; no open critical/high severity defects.
-- All implemented requirements in the RTM have test evidence.
-- Full pytest suite and CI pass on the release candidate.
-- Failed/not-implemented requirements are documented as deviations; no planned feature is falsely marked accepted.
-- Peer review completed and demo workflow verified.
+
+- Planned executable tests have been run or explicitly marked blocked/not measured.
+- No known critical defect prevents the core demonstration workflows.
+- Automated tests pass.
+- CI checks pass for the release merge.
+- Manual smoke and functional workflows are recorded.
+- Known deviations and unimplemented requirements are documented.
+- Release documentation is reviewed.
 
 ### 5.5 Security validation
-- Confirm sensitive fields are not logged.
-- Confirm email credentials are not stored in source code.
-- Test service-layer validation with invalid quantities, identifiers, dates and monetary inputs.
-- Attempt privileged actions using each role once authentication/RBAC exists.
-- Verify cashier cannot select an inactive employee.
-- Verify invoice/customer data visibility follows approved role permissions.
-- Verify stock, invoice and waste transactions roll back completely on failure.
-- Inspect audit records for actor and timestamp after employee, stock and waste changes.
+
+Security validation covers:
+
+1. Check that customer contact details and secrets are not written to ordinary logs.
+2. Review repository and configuration files for committed credentials.
+3. Verify service-layer validation for untrusted inputs.
+4. Review whether employee and customer data is unnecessarily exposed.
+5. Confirm whether authentication and role-based permissions are implemented.
+6. Verify that privileged operations cannot be performed without the required role, if RBAC is implemented.
+7. Review audit records for invoice and stock changes.
+
+**Current limitation:** Full authentication/RBAC and complete audit-trail coverage have not been confirmed. These checks must be recorded as not confirmed or pending, not passed.
 
 ## 6. Test environment
 
 | Item | Environment |
 |---|---|
-| OS | Windows and macOS development machines |
-| Runtime | Python 3.10+; CI currently configured for Python 3.12 |
-| GUI | PySide6 |
-| Database | Temporary SQLite database for tests; local SQLite for manual demo |
+| Language | Python 3 |
+| UI framework | PySide6 |
 | ORM | SQLAlchemy |
-| Test tools | pytest, pytest-qt where applicable |
+| Database | SQLite |
+| Test framework | pytest and pytest-qt where applicable |
 | CI | GitHub Actions |
-| Test data | Synthetic products, batches, employees, invoices and customer contact details |
-| Reporting | pytest output, CI run, defect log and test summary |
+| Version control | Git and GitHub |
+| Operating environment | Local development; Windows and macOS usage reported |
+| Test data | Local test database and synthetic records |
 
-## 7. Test schedule and milestones
-Dates are planning targets and should be updated to the actual team calendar.
+The application launch command is:
 
-| Milestone | Target |
-|---|---|
-| SRS/SAD/Test Plan/RTM review | 5 Nov 2026 |
-| Employee branch peer review and integration | Before release freeze |
-| Waste scope decision and implementation/deviation approval | Before final evaluation |
-| Regression and system testing | After feature freeze |
-| Final UAT and demo rehearsal | Before 9 Nov 2026 presentation |
-| Final test summary and document sign-off | Before submission |
+`python -m src.main`
 
-## 8. Test deliverables
-- SRS, SAD, Test Plan and RTM.
-- Automated unit/integration test suite.
-- Test execution logs and CI run evidence.
-- Defect list with severity, owner and resolution.
-- Manual system/UAT checklist.
-- Code coverage and branch coverage reports if configured.
-- Documented deviations and final test summary.
+The automated test command is:
 
-## 9. Roles and responsibilities
+`python -m pytest -q`
 
-| Member | Role / responsibility |
-|---|---|
-| Deeksha | UI and billing/dashboard workflow tests for assigned features |
-| Chris | Inventory, invoice and stock-deduction service tests |
-| Janhavi | Regression test design and execution |
-| Chiranth (Member 4) | Integration, documentation, RTM, test coordination and release checklist |
+## 7. Test schedule
 
-All contributors are responsible for tests covering their own code and for peer review of at least one other contribution.
+| Activity | Planned / recorded date | Status |
+|---|---|---|
+| Test planning and case design | Sprint 1–2 | Completed |
+| Automated regression | 6 Nov 2026 | 111 tests passed |
+| Clean-checkout verification | 6 Nov 2026 | Completed |
+| Manual smoke testing | 6 Nov 2026 | Six areas passed |
+| Functional workflow verification | 6 Nov 2026 | Six workflows passed |
+| Final documentation review | 6 Nov 2026 onward | In progress |
+| Final evaluation demonstration | 9 Nov 2026 | Scheduled |
 
-## 10. Risks and mitigation
+## 8. Test cases
+
+| Test ID | Test scenario | Expected result | Current result/status |
+|---|---|---|---|
+| TC-001 | Create, view, update and deactivate a product | Valid product changes persist; deactivation preserves history | Automated suite passed; mapped test |
+| TC-002 | Submit blank, duplicate or invalid product fields | Invalid values are rejected with clear errors | Automated suite passed; mapped test |
+| TC-003 | Receive a batch and calculate available stock | Valid batch is stored and stock is calculated from remaining quantities | Automated suite passed; mapped test |
+| TC-004 | Identify expired and near-expiry batches | Correct batches are returned according to expiry date and horizon | Automated suite passed; mapped test |
+| TC-005 | Checkout with multiple eligible batches | Stock is allocated in FEFO order | Automated suite passed; mapped test |
+| TC-006 | Checkout with insufficient valid stock | Checkout is rejected and stock remains unchanged | Automated suite passed; mapped test |
+| TC-007 | Add, update and remove cart items; calculate total | Cart quantities and totals are correct | Automated suite passed; mapped test |
+| TC-008 | Complete checkout and generate invoice | Invoice and item snapshots are persisted with stock deduction | Automated suite passed; mapped test |
+| TC-009 | Force checkout failure during persistence | Transaction rolls back without partial invoice/stock changes | Automated suite passed; mapped test |
+| TC-010 | Create, edit, activate/deactivate employee and use cashier workflow | Employee state and cashier-related behaviour are correct | Release manual workflow reported passed; see evidence |
+| TC-011 | Generate/provide invoice and handle optional customer fields | Invoice is generated and provided; optional fields are handled. Printing is not a required feature. | Mapped to automated/manual verification; email delivery requires separate configuration verification |
+| TC-012 | Waste management | Not applicable to the final project scope | Out of scope — excluded from final release |
+| TC-013 | Open and refresh dashboard | Summary reflects persisted inventory, expiry and sales data | Manual smoke passed; waste summary not implemented |
+| TC-014 | Measure dashboard summary and product-listing response time | 95% of defined runs complete within 3 seconds | Pass — 30 runs; 1,000 products and 2,000 batches. Dashboard P95 140.11 ms (maximum 189.75 ms); product listing P95 20.61 ms (maximum 22.98 ms). Synthetic in-memory SQLite benchmark. |
+| TC-015 | Measure complete checkout processing time for 20 distinct products | 95% of defined runs complete within 3 seconds | Pass — 30 successful checkouts; 1,000 products and 2,000 batches. Average 26.90 ms, median 26.88 ms, P95 28.93 ms, maximum 31.44 ms. Synthetic in-memory SQLite benchmark. |
+| TC-016 | Observe first-time users completing checkout | At least 4 of 5 users complete without assistance | Pass — 5 of 5 completed without assistance (100%); acceptance threshold met. |
+| TC-017 | Inspect logs and repository configuration for sensitive data | No secrets or full customer contact details appear in ordinary logs or committed configuration | Review required; not claimed passed |
+| TC-018 | Verify authentication and role permissions | Unauthenticated or unauthorised operations are denied | Implementation reported by team; security/permission validation deferred and not tested for this evaluation. |
+| TC-019 | Submit invalid quantities, prices, dates and identifiers | Invalid input is rejected safely | Automated suite passed; mapped test |
+| TC-020 | Review audit history for stock and employee changes | Actor/time history is available for required operations | Partial/unverified; further review required |
+
+### 8.1 Execution summary
+
+Reported release evidence as of 6 November 2026:
+
+- Automated regression suite: 131 tests passed.
+- Coverage report: 37% statement coverage with branch measurement enabled; HTML report generated.
+- Fresh clone: dependencies installed and application launched.
+- Clean-checkout automated suite: 111 tests passed at the time of the clean-checkout verification; the later local regression suite passed 131 tests.
+- Manual smoke testing: six listed areas passed.
+- Functional workflow testing: six listed workflows passed.
+- PR #21 merged into `main`; all reported PR checks passed.
+- Demo video playback verified.
+- TC-014 dashboard and product-listing performance benchmark passed: 30 runs against 1,000 products and 2,000 batches; P95 values 140.11 ms and 20.61 ms respectively.
+- TC-015 complete 20-item checkout benchmark passed: 30 successful checkouts; P95 28.93 ms.
+- TC-016 usability observation passed: all five first-time users completed checkout without assistance.
+
+The 131-test result is a suite-level result. It does not mean every deferred, out-of-scope or unverified test in this plan passed. The performance results are synthetic in-memory SQLite measurements, not production-scale or concurrent-user load tests.
+
+## 9. Test deliverables
+
+- Software Test Plan.
+- Automated test source files.
+- Test execution results.
+- Manual test evidence.
+- Screenshots under `docs/evidence/screenshots/`.
+- Demo video under `docs/evidence/demo.mov`.
+- Release checklist.
+- Requirements Traceability Matrix.
+- CI workflow results.
+
+## 10. Roles and responsibilities
+
+| Role | Team member | Responsibility |
+|---|---|---|
+| Backend and data | Deeksha | Data models, database and service implementation |
+| UI and workflows | Chris | PySide6 screens and application workflows |
+| QA and CI/CD | Janhavi | Test automation, regression and CI validation |
+| Integration and documentation | Chiranth | Integration coordination, Jira, documentation and release evidence |
+
+All team members are responsible for testing and documenting their own changes and participating in peer review.
+
+## 11. Risks and mitigation
 
 | Risk | Mitigation |
 |---|---|
-| Waste feature is a placeholder | Keep its test cases marked blocked/not implemented; do not report them as passed. |
-| Employee branch not merged | Test on feature branch, obtain peer review, then rerun tests on merged release branch. |
-| Local DB differs from test DB | Use isolated SQLite fixtures and document schema initialisation. |
-| Email/network unavailable | Test invoice persistence separately; simulate email failure and ensure invoice remains committed. |
-| Expiry date boundary errors | Test yesterday, today, horizon boundary and day after horizon. |
-| Stock race or partial update | Use transaction/conditional update tests and failure injection. |
-| Cross-platform UI differences | Run smoke test on Windows and macOS before final demo. |
+| Unstable application build | Run regression suite and CI before merge |
+| Missing or invalid test data | Use repeatable synthetic data and isolated test databases |
+| Database state affects test results | Use temporary test databases and fixtures |
+| Waste management excluded from scope | Keep waste-related tests out of release acceptance criteria |
+| Email service unavailable | Test invoice persistence independently of delivery |
+| Platform differences | Verify installation and launch on supported environments |
+| Security controls not confirmed | Document limitations and avoid claiming security acceptance |
+| Synthetic performance data may not represent production use | Disclose in-memory SQLite test conditions and avoid production-scale claims |
 
-## 11. Assumptions and dependencies
-- Product and batch fixtures can be generated without production data.
-- The workstation date/time is valid.
-- Test environment uses same dependency versions as documented project setup.
-- Email tests can use a mock/stub rather than a real recipient.
-- Waste acceptance tests depend on completion of PMS-FR-025–030.
+## 12. Assumptions and dependencies
 
-## 12. Suspension and resumption criteria
-Suspend a test run if the application cannot initialise its database, the test environment is unavailable, or a blocking defect invalidates more than 30% of planned tests. Resume after the environment is restored and blocking defects are fixed or isolated.
+- Python and required packages are available.
+- SQLite can create and access the local database.
+- The test environment has the necessary UI dependencies.
+- Test records use synthetic data.
+- GitHub Actions is available for repository CI.
+- External email delivery depends on valid provider configuration.
+- Waste and RBAC tests depend on those features being implemented.
 
-## 13. Test case management and traceability
+## 13. Suspension and resumption criteria
 
-The authoritative mapping is in `RTM.md`. Each test case uses IDs `TC-###`; each SRS requirement maps to at least one verification reference. Test status must be recorded as Not Run, Pass, Fail or Blocked. A test for an unimplemented feature is Blocked, not Pass.
+Suspend testing if:
 
-## 14. Test cases
+- The application cannot launch.
+- The database is unavailable or corrupted.
+- A blocking defect prevents execution of core workflows.
+- The test environment is unstable.
+- Test results cannot be reproduced.
 
-| Test ID | Requirement(s) | Scenario / steps | Expected result | Type / status |
-|---|---|---|---|---|
-| TC-001 | FR-001, FR-002 | Create valid product; retrieve and update it. | Product persists and updated fields are returned. | Unit/integration — execute |
-| TC-002 | FR-001 | Create two products with same SKU and submit blank required fields. | Service rejects duplicate/invalid product; no invalid row persists. | Negative — execute |
-| TC-003 | FR-004, FR-005 | Add a valid batch and query available stock. | Batch stores received/remaining quantity; stock total equals sum of remaining batches. | Integration — execute |
-| TC-004 | FR-007, FR-008 | Create expired, today, within-7-day and beyond-7-day batches. | Expired list and expiring list contain only correct boundary records. | Unit — execute |
-| TC-005 | FR-009 | Add two valid batches with different expiry dates; sell quantity spanning both. | Earlier-expiring batch is consumed first; no expired batch is used. | Integration — execute |
-| TC-006 | FR-010, NFR-003, NFR-008 | Attempt checkout above valid available stock. | Checkout fails; no invoice is persisted and all batch quantities remain unchanged. | Negative/integration — execute |
-| TC-007 | FR-012, FR-013 | Add, change and remove cart lines; calculate totals. | Positive quantities accepted; line/subtotal/tax/discount/total follow approved rules. | Unit/UI — execute |
-| TC-008 | FR-014, FR-015 | Complete valid checkout and inspect invoice and batches. | Unique invoice and item snapshots persist; exact stock deduction commits once. | Integration — execute |
-| TC-009 | FR-015, NFR-003, NFR-008 | Force an exception after invoice creation but before stock update/commit. | Transaction rolls back invoice and stock changes. | Failure injection — execute |
-| TC-010 | FR-016, FR-020–023 | Create employee, select as cashier, checkout; then deactivate employee and retry. | Active employee is attributed; inactive employee cannot be selected/used. | Integration/UI — blocked until SCRUM-48 merge |
-| TC-011 | FR-018, FR-019 | Export invoice; simulate email provider failure. | Export contains correct invoice; email failure does not undo sale. | Integration — execute |
-| TC-012 | FR-025–030 | Record valid waste against a batch; attempt zero, negative and excessive quantity. | Valid event persists and reduces stock; invalid/excess entries are rejected atomically. | Planned — blocked (waste not implemented) |
-| TC-013 | FR-031–033 | Compare dashboard values with seeded database records, refresh after checkout. | Displayed product, low-stock, expiry, sales and invoice metrics match query results. | Integration/UI — execute |
-| TC-014 | NFR-001 | Load agreed dataset; run product search and dashboard refresh 20 times. | At least 95% of runs complete within 3 seconds. | Performance — not measured |
-| TC-015 | NFR-002 | Run 20-line checkout 20 times using repeatable fixture data. | At least 95% of DB processing runs complete within 3 seconds. | Performance — not measured |
-| TC-016 | NFR-004 | Observe five first-time users completing basic checkout after 5-minute orientation. | At least four complete without assistance. | UAT — not run |
-| TC-017 | SEC-003, SEC-004 | Seed fake customer contact values and fake credentials; inspect logs and repository diff. | Sensitive values absent from logs and secrets absent from tracked files. | Security — execute |
-| TC-018 | SEC-001, SEC-002 | Attempt inventory/employee/waste actions using each role. | Each action is permitted/denied according to approved role matrix. | Security — blocked until RBAC exists |
-| TC-019 | SEC-005 | Submit malformed IDs, blank strings, invalid dates and invalid numeric values directly to services. | Service rejects invalid data without corrupting database. | Security/unit — execute |
-| TC-020 | SEC-006, FR-011 | Perform stock adjustment, employee status change and waste event; inspect history. | Actor and timestamp are retained for each auditable action. | Audit — partial / waste blocked |
+Resume when:
 
-## 15. Test metrics and reporting
-Collect:
-- Number of planned, executed, passed, failed and blocked tests.
-- Pass rate = passed / executed × 100.
-- Requirement coverage = requirements with at least one executed test / total requirements × 100.
-- Defect count by severity and age.
-- CI result and duration.
-- Performance percentile for NFR-001/002.
-- Waste feature readiness (blocked until implemented).
+- Blocking defects are resolved.
+- The environment is stable.
+- Test data and dependencies are restored.
+- The relevant build is available.
 
-Do not count Blocked or Not Run cases as passing.
+## 14. Test metrics and reporting
 
-## 16. Approvals
+Metrics to report:
 
-| Role | Name | Status |
+- Number of automated tests passed, failed and skipped.
+- Manual smoke-test completion.
+- Functional workflow completion.
+- Open critical and high-priority defects.
+- Requirement-to-test coverage.
+- Performance results when measured.
+- CI pass/fail status.
+
+Current reported metrics:
+
+| Metric | Result |
+|---|---|
+| Automated tests | 131 passed |
+| Clean-checkout tests | 111 passed at clean-checkout verification; later local suite: 131 passed |
+| Manual smoke areas | 6 passed |
+| Functional workflows | 6 passed |
+| PR #21 checks | Passed |
+| TC-014 performance | Pass — dashboard P95 140.11 ms; product listing P95 20.61 ms |
+| TC-015 checkout performance | Pass — 20-item checkout P95 28.93 ms |
+| TC-016 usability | Pass — 5/5 first-time users completed without assistance |
+| Waste-management tests | Out of scope — removed from final project scope |
+| Authentication/RBAC tests | Implementation reported; security validation deferred and not tested |
+
+## 15. Approvals
+
+| Role | Name | Approval / date |
 |---|---|---|
-| Documentation owner | Chiranth | Draft prepared |
-| Developer peer reviewer | Team member to be assigned | Pending |
-| QA reviewer | Janhavi / team decision | Pending |
-| Team approval | All members | Pending |
+| QA / CI lead | Janhavi | Pending |
+| Development representative | Deeksha / Chris | Pending |
+| Integration and documentation owner | Chiranth | Pending |
+| Project/evaluation authority | To be confirmed | Pending |
+
+Approval must be recorded by the relevant team members. This draft does not imply formal sign-off.
