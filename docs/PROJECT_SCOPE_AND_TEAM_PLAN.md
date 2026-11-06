@@ -56,7 +56,7 @@ The following table records the known release state as of 6 November 2026.
 | Employee profiles | P1 | Implemented and merged |
 | Cashier attribution | P1 | Included in merged release; retain verification evidence |
 | Distinct employee on-leave state | P1 | Not confirmed; current active/inactive status does not establish a separate leave state |
-| Role-based access control | P1 | Not confirmed implemented |
+| Role-based access control | P1 | Implemented, as reported by the team; security and permission validation deferred |
 | Dashboard inventory/expiry/sales summaries | P1 | Implemented |
 | Dashboard waste summary | P1 | Not implemented |
 | Supplier and stock-receiving records | P1 | Batch receiving exists; full supplier-management scope is not confirmed |
@@ -139,7 +139,7 @@ Reported on 6 November 2026:
 - Demo video saved at `docs/evidence/demo.mov` and verified to play.
 - Screenshots saved under `docs/evidence/screenshots/`.
 
-These results do not establish that unimplemented waste management, authentication/RBAC, performance targets or usability targets have passed.
+These results do not establish that unimplemented waste management has passed acceptance. Authentication/RBAC implementation is reported by the team, but security and permission validation remain deferred. Performance and usability results are recorded separately with their test conditions.
 
 ## 9. Definition of Done
 
