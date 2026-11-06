@@ -37,5 +37,6 @@ def init_db() -> None:
     from src.models.product import Product  # noqa: F401
     from src.models.employee import Employee  # noqa: F401
     from src.models.invoice import Invoice, InvoiceItem  # noqa: F401
+    from src.models.waste import WasteRecord  # noqa: F401
 
     Base.metadata.create_all(bind=engine)

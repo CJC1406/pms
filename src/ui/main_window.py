@@ -64,9 +64,7 @@ class MainWindow(QMainWindow):
             ("Inventory", InventoryPage),
             ("POS / Cart", CartPage),
             ("Expiry Tracking", ExpiryPage),
-            ("Waste Management", self.create_placeholder),
-            ("Reports", self.create_placeholder),
-	    ("Employee Management", EmployeePage),
+            ("Employee Management", EmployeePage),
         ]
 
         self.nav_buttons = []
@@ -149,7 +147,7 @@ class MainWindow(QMainWindow):
             ("Expiring Soon", "0", "Batches expiring within 7 days"),
             ("Daily Sales", "?0.00", "Sales recorded today"),
             ("Invoices Today", "0", "Invoices generated today"),
-            ("Waste This Month", "N/A", "Waste tracking not implemented"),
+            ("Waste This Month", "0", "Estimated cost of recorded write-offs"),
         ]
 
         for index, (heading, value, detail) in enumerate(cards):
@@ -170,7 +168,6 @@ class MainWindow(QMainWindow):
         actions = [
             ("View Inventory", 1),
             ("Check Expiry", 3),
-            ("Waste Management", 4),
         ]
 
         for text, page_index in actions:
@@ -212,7 +209,7 @@ class MainWindow(QMainWindow):
                 str(summary["invoice_count"])
             )
             self.dashboard_values["Waste This Month"].setText(
-                "N/A"
+                f"?{summary['monthly_waste_cost']:,.2f}"
             )
 
         except Exception as exc:

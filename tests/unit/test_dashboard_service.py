@@ -56,8 +56,7 @@ def test_empty_dashboard_summary(session):
     assert summary["expiring_quantity"] == 0
     assert summary["daily_sales"] == Decimal("0")
     assert summary["invoice_count"] == 0
-    assert summary["waste_status"] == "Not implemented"
-
+    assert summary["monthly_waste_cost"] == Decimal("0")
 
 def test_dashboard_counts_products_and_low_stock(session, product):
     summary = get_dashboard_summary(session)
