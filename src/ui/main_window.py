@@ -19,6 +19,7 @@ from src.ui.expiry_page import ExpiryPage
 from src.ui.cart_page import CartPage
 from src.ui.employee_page import EmployeePage
 
+
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -65,6 +66,7 @@ class MainWindow(QMainWindow):
             ("POS / Cart", CartPage),
             ("Expiry Tracking", ExpiryPage),
             ("Employee Management", EmployeePage),
+
         ]
 
         self.nav_buttons = []
@@ -114,20 +116,11 @@ class MainWindow(QMainWindow):
 
         header.addStretch()
 
-        refresh_button = QPushButton("Refresh Dashboard")
-        refresh_button.setObjectName("actionButton")
-        refresh_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        refresh_button.clicked.connect(self.refresh_dashboard)
-        header.addWidget(refresh_button)
-
-        status = QLabel("STORE OVERVIEW")
-        status.setObjectName("statusLabel")
-        header.addWidget(status)
 
         layout.addLayout(header)
 
         description = QLabel(
-            "Monitor stock levels, upcoming expiries, daily sales, and waste."
+            "Monitor stock levels, upcoming expiries, and daily sales."
         )
         description.setObjectName("description")
         layout.addWidget(description)
@@ -145,9 +138,8 @@ class MainWindow(QMainWindow):
             ("Total Products", "0", "Active products in catalogue"),
             ("Low Stock", "0", "Products needing attention"),
             ("Expiring Soon", "0", "Batches expiring within 7 days"),
-            ("Daily Sales", "?0.00", "Sales recorded today"),
+            ("Daily Sales", "₹0.00", "Sales recorded today"),
             ("Invoices Today", "0", "Invoices generated today"),
-            ("Waste This Month", "0", "Estimated cost of recorded write-offs"),
         ]
 
         for index, (heading, value, detail) in enumerate(cards):
@@ -203,13 +195,10 @@ class MainWindow(QMainWindow):
                 str(summary["expiring_batches"])
             )
             self.dashboard_values["Daily Sales"].setText(
-                f"?{summary['daily_sales']:,.2f}"
+                f"₹{summary['daily_sales']:,.2f}"
             )
             self.dashboard_values["Invoices Today"].setText(
                 str(summary["invoice_count"])
-            )
-            self.dashboard_values["Waste This Month"].setText(
-                f"?{summary['monthly_waste_cost']:,.2f}"
             )
 
         except Exception as exc:
@@ -241,29 +230,6 @@ class MainWindow(QMainWindow):
 
         return card
 
-    def create_placeholder(self, page_name):
-        page = QWidget()
-
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(32, 28, 32, 28)
-        layout.setSpacing(16)
-
-        title = QLabel(page_name)
-        title.setObjectName("pageTitle")
-        layout.addWidget(title)
-
-        message = QLabel(
-            f"The {page_name.lower()} module will be implemented "
-            "in a future development step."
-        )
-        message.setObjectName("description")
-        message.setWordWrap(True)
-        layout.addWidget(message)
-
-        layout.addStretch()
-
-        return page
-
     def change_page(self, index):
         self.pages.setCurrentIndex(index)
 
@@ -292,7 +258,7 @@ class MainWindow(QMainWindow):
             background-color: #FFF1F6;
             color: #422536;
             font-family: Arial;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         QFrame#sidebar {
@@ -401,6 +367,42 @@ class MainWindow(QMainWindow):
             border-radius: 8px;
             padding: 13px;
             color: #9D174D;
+            font-weight: 600;
+        }
+
+        QLineEdit, QSpinBox, QDoubleSpinBox, QDateEdit, QComboBox {
+            background-color: #FFFFFF;
+            color: #422536;
+            border: 1px solid #E8B8CD;
+            border-radius: 6px;
+            padding: 7px;
+            selection-background-color: #DB2777;
+            selection-color: #FFFFFF;
+        }
+
+        QSpinBox::up-button, QDoubleSpinBox::up-button,
+        QDateEdit::up-button, QSpinBox::down-button,
+        QDoubleSpinBox::down-button, QDateEdit::down-button {
+            background-color: #FCE7F0;
+            border: none;
+            width: 22px;
+        }
+
+QTableWidget {
+            background-color: #FFFFFF;
+            alternate-background-color: #FFF7FA;
+            color: #422536;
+            gridline-color: #F3D6E2;
+            border: 1px solid #F3D6E2;
+            border-radius: 8px;
+        }
+
+        QHeaderView::section {
+            background-color: #FCE7F0;
+            color: #652342;
+            padding: 9px;
+            border: none;
+            font-weight: 600;
         }
         """
 
@@ -411,7 +413,7 @@ class MainWindow(QMainWindow):
             background-color: #21141D;
             color: #FCE7F0;
             font-family: Arial;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         QFrame#sidebar {
@@ -497,7 +499,42 @@ class MainWindow(QMainWindow):
 
         QLabel#cardDetail {
             color: #D5B8C8;
-            font-size: 11px;
+            font-size: 12px;
+        }
+
+        QLineEdit, QSpinBox, QDoubleSpinBox, QDateEdit, QComboBox {
+            background-color: #382433;
+            color: #FCE7F0;
+            border: 1px solid #76516B;
+            border-radius: 6px;
+            padding: 7px;
+            selection-background-color: #DB2777;
+            selection-color: #FFFFFF;
+        }
+
+        QSpinBox::up-button, QDoubleSpinBox::up-button,
+        QDateEdit::up-button, QSpinBox::down-button,
+        QDoubleSpinBox::down-button, QDateEdit::down-button {
+            background-color: #593349;
+            border: none;
+            width: 22px;
+        }
+
+QTableWidget {
+            background-color: #2C1B28;
+            alternate-background-color: #382433;
+            color: #FCE7F0;
+            gridline-color: #493044;
+            border: 1px solid #493044;
+            border-radius: 8px;
+        }
+
+        QHeaderView::section {
+            background-color: #493044;
+            color: #FFE4F0;
+            padding: 9px;
+            border: none;
+            font-weight: 600;
         }
         """
 
