@@ -85,8 +85,8 @@ The agreed billing design includes:
 
 | Member | Role | Responsibilities |
 |---|---|---|
-| Deeksha | Backend and data | SQLAlchemy models, database schema, inventory/sales business rules and service layer |
-| Chris | UI and workflows | PySide6 screens, inventory forms, billing cart, invoice UI and dashboard |
+| Chris | Backend and data | SQLAlchemy models, database schema, inventory/sales business rules and service layer |
+| Deeksha | UI and workflows | PySide6 screens, inventory forms, billing cart, invoice UI and dashboard |
 | Janhavi | QA and CI/CD | pytest, integration/regression tests, GitHub Actions and build checks |
 | Chiranth | Integration, Jira and documentation | Backlog/sprint coordination, cross-module integration, SRS/SAD/Test Plan/RTM, demo and release checklist |
 
